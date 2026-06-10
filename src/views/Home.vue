@@ -1,5 +1,7 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+const router = useRouter()
 defineOptions({
   name: 'HomeView',
 })
@@ -36,6 +38,16 @@ const isloading = ref(false)
 const handleSearchSubmit = () => {
   isloading.value = true
 }
+// 跳转页面
+const goPage = (path) => {
+  router.push(path)
+}
+// 热门目的地
+const popularCities = ['北京', '上海', '广州', '深圳', '成都', '杭州', '西安', '重庆']
+// 选择热门目的地
+const selectedCity = (city) => {
+  formData.value.city = city
+}
 </script>
 <template>
   <div class="page-container">
@@ -48,6 +60,7 @@ const handleSearchSubmit = () => {
         left-icon="info-o"
         text="基于AI的智能景点介绍与行程规划系统"
       />
+      <!-- 行程规划 -->
       <div class="card search-card">
         <div class="section-title">规划您的旅程</div>
         <van-field
@@ -85,8 +98,27 @@ const handleSearchSubmit = () => {
           >开始规划</van-button
         >
       </div>
-      <div class="card"></div>
-      <div class="card"></div>
+      <!-- 快捷入口 -->
+      <div class="card quick-action">
+        <div class="section-title">快捷入口</div>
+        <van-grid :gutter="12" :column-num="2">
+          <van-grid-item icon="chat-o" @click="goPage('/chat')" text="AI对话" />
+          <van-grid-item icon="user-o" @click="goPage('/profile')" text="我的" />
+        </van-grid>
+      </div>
+      <!-- 热门目的地 -->
+      <div class="card popular-destinations">
+        <div class="section-title">热门目的地</div>
+        <van-grid :gutter="6" :column-num="4">
+          <van-grid-item
+            v-for="(city, index) in popularCities"
+            :key="index"
+            @click="selectedCity(city)"
+          >
+            <div class="city-tag" :class="{ active: formData.city === city }">{{ city }}</div>
+          </van-grid-item>
+        </van-grid>
+      </div>
     </div>
     <!-- 城市选择器 -->
     <van-popup v-model:show="showCityPicker" position="bottom" round>
@@ -102,5 +134,17 @@ const handleSearchSubmit = () => {
 <style scoped>
 .search-card {
   margin-top: 16px;
+}
+.city-tag {
+  padding: 8px 12px;
+  border-radius: 16px;
+  background: #f7f8fa;
+  color: #666;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+.city-tag.active {
+  background: #007aff;
+  color: #fff;
 }
 </style>
