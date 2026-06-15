@@ -1,10 +1,19 @@
 import express from "express";
+import TravelService from "../services/travelService.js";
+const travelService = new TravelService();
+
 const router = express.Router();
-// 推荐接口
-router.post("/recommend", (req, res) => {
-  res.json({ message: "推荐接口" });
+router.post("/recommend", async (req, res) => {
+  const { city, budget, days } = req.body;
+  if (!city || !budget || !days) {
+    return res.status(400).json({
+      success: false,
+      message: "缺少必要参数city、budget、days",
+    });
+  }
+  const result = await travelService.recommend(city, budget, days);
+  return res.json(result);
 });
-// 聊天接口
 router.post("/chat", (req, res) => {
   res.json({ message: "聊天接口" });
 });
