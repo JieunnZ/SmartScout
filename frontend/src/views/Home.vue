@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { showToast } from 'vant'
 const router = useRouter()
 defineOptions({
   name: 'HomeView',
@@ -35,8 +36,28 @@ const handleCityConfirm = ({ selectedOptions }) => {
 // 加载状态
 const isloading = ref(false)
 // 提交表单
-const handleSearchSubmit = () => {
+const handleSubmit = () => {
   isloading.value = true
+  if (!formData.value.city) {
+    showToast('请选择目的地')
+    return
+  }
+  if (!formData.value.budget || formData.value.budget < 100) {
+    showToast('预算不能小于100元')
+    return
+  }
+  if (!formData.value.days || formData.value.days < 1 || formData.value.days > 30) {
+    showToast('天数必须在1-30天之间')
+    return
+  }
+  router.push({
+    path: '/detail',
+    query: {
+      city: formData.value.city,
+      budget: formData.value.budget,
+      days: formData.value.days,
+    },
+  })
 }
 // 跳转页面
 const goPage = (path) => {
@@ -92,7 +113,7 @@ const selectedCity = (city) => {
           type="primary"
           size="large"
           round
-          @click="handleSearchSubmit"
+          @click="handleSubmit"
           :loading="isloading"
           style="margin-top: 12px"
           >开始规划</van-button
