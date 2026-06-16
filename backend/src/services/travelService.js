@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage } from "@langchain/core/messages";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import "dotenv/config.js";
 class TravelService {
   constructor() {
@@ -37,10 +37,10 @@ class TravelService {
       console.log(response);
       const fullResponse = response.content || "";
       try {
-        const jsonMatch =
-          fullResponse.match(/```json\n([\s\S]*?)\n```/) ||
-          fullResponse.match(/```\n([\s\S]*?)\n```/) ||
-          fullResponse.match(/\{[\s\S]*\}/);
+        // const jsonMatch =
+        //   fullResponse.match(/```json\n([\s\S]*?)\n```/) ||
+        //   fullResponse.match(/```\n([\s\S]*?)\n```/) ||
+        //   fullResponse.match(/\{[\s\S]*\}/);
         const resData = JSON.parse(fullResponse);
         return resData;
       } catch (error) {
@@ -50,6 +50,39 @@ class TravelService {
           rawResponse: error.message,
         };
       }
+    } catch (err) {
+      return {
+        success: false,
+        error: err.message,
+      };
+    }
+  }
+  // 与大模型对话
+  async chat(message, streamCallback) {
+    const messages = [
+      new SystemMessage(
+        "你是一个专业的旅游规划师，擅长根据用户的需求生成详细的中文旅行行程，请用中文回答用户关于旅游的问题。",
+      ),
+      new HumanMessage(message),
+    ];
+    try {
+      const stream = await this.llm.stream(messages);
+      let fullResponse = "";
+      for await (const chunk of stream) {
+        const content = chunk.content || "";
+        if (content.trim() === "") {
+          continue;
+        }
+        fullResponse += content;
+        // 发送流式数据
+        if (streamCallback) {
+          streamCallback({ content });
+        }
+      }
+      return {
+        success: true,
+        reply: fullResponse,
+      };
     } catch (err) {
       return {
         success: false,
