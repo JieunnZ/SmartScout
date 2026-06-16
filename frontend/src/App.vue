@@ -7,7 +7,7 @@ const active = ref(0)
 <template>
   <div class="app-container">
     <router-view></router-view>
-    <van-tabbar v-if="['Home', 'Chat', 'Profile'].includes(route.name)" router v-model="active">
+    <van-tabbar v-if="['home', 'chat', 'profile'].includes(route.name)" router v-model="active">
       <van-tabbar-item icon="home-o" to="/">首页</van-tabbar-item>
       <van-tabbar-item icon="chat-o" to="/chat">聊天</van-tabbar-item>
       <van-tabbar-item icon="user-o" to="/profile">我的</van-tabbar-item>
