@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { fetchStream } from '../utils/request'
 import { useRouter } from 'vue-router'
 const router = useRouter()
 defineOptions({
@@ -20,11 +21,23 @@ const onBack = () => {
   router.back()
 }
 // 点击标签
-const handleClickTag = (q) => {}
+const handleClickTag = (q) => {
+  console.log(q)
+}
 // 输入框内容
 const inputMessage = ref('')
+// 是否正在流式响应
+const isStreaming = ref(false)
 // 发送消息
-const sendMessage = () => {}
+const sendMessage = () => {
+  fetchStream(
+    'chat',
+    { message: inputMessage.value },
+    () => {},
+    () => {},
+    () => {},
+  )
+}
 </script>
 <template>
   <div class="page-container chat-page">
@@ -40,7 +53,7 @@ const sendMessage = () => {}
             v-for="q in quickQuestions"
             :key="q"
             class="quick-tag"
-            @click="handleClickTag"
+            @click="handleClickTag(q)"
             size="large"
             mark
             >{{ q }}</van-tag
@@ -52,7 +65,7 @@ const sendMessage = () => {}
       <van-field
         v-model="inputMessage"
         placeholder="输入您的问题..."
-        :disabled="!inputMessage.trim()"
+        :disabled="isStreaming"
         @keyup.enter="sendMessage"
       >
         <template #button>
