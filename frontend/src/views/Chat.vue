@@ -1,14 +1,22 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { fetchStream } from '../utils/request'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { showToast } from 'vant'
 import ChatBubble from '../components/ChatBubble.vue'
 const router = useRouter()
+const route = useRoute()
 defineOptions({
   name: 'ChatView',
 })
 
+const chatContainer = ref(null)
+// 滚动到最底部
+const scrollToBottom = () => {
+  if (chatContainer.value) {
+    chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+  }
+}
 // 模拟消息列表
 const messages = ref([])
 // 快速问题
@@ -69,10 +77,12 @@ const fetchAIResponse = (userMag) => {
       if (lastMsg && lastMsg.role === 'ai') {
         lastMsg.content = fullResponse
       }
+      scrollToBottom()
     },
     // 流式响应结束
     () => {
       isStreaming.value = false
+      scrollToBottom()
     },
     (errMsg) => {
       const lastMsg = messages.value[messages.value.length - 1]
@@ -81,16 +91,22 @@ const fetchAIResponse = (userMag) => {
       }
       isStreaming.value = false
       showToast('AI回复失败')
+      scrollToBottom()
     },
   )
 }
+onMounted(() => {
+  if (route.query.scene === 'detail' && route.query.city) {
+    inputMessage.value = `我想了解一下${route.query.city}的旅游信息`
+  }
+})
 </script>
 <template>
   <div class="page-container chat-page">
     <div class="page-header">
       <van-nav-bar title="AI旅游助手" fixed left-arrow left-text="返回" @click-left="onBack" />
     </div>
-    <div class="chat-container">
+    <div class="chat-container" ref="chatContainer">
       <div class="chat-empty" v-if="messages.length === 0">
         <van-empty description="开始和AI助手对话"></van-empty>
         <div class="quick-questions">
@@ -146,10 +162,11 @@ const fetchAIResponse = (userMag) => {
 }
 
 .chat-container {
-  height: 650px;
+  /* height: 650px; */
+  flex: 1;
   overflow-y: auto;
   padding: 16px;
-  padding-bottom: 60px;
+  padding-bottom: 120px;
 }
 
 .chat-empty {

@@ -46,7 +46,7 @@ const fetchTripData = async () => {
 // 咨询AI助手
 const goToChat = () => {
   router.push({
-    name: '/chat',
+    path: '/chat',
     query: {
       scene: 'detail',
       city: formData.value.city,
