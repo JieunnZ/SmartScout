@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { fetchStream } from '../utils/request'
 import { useRouter } from 'vue-router'
+import { showToast } from 'vant'
+import ChatBubble from '../components/ChatBubble.vue'
 const router = useRouter()
 defineOptions({
   name: 'ChatView',
@@ -28,14 +30,58 @@ const handleClickTag = (q) => {
 const inputMessage = ref('')
 // 是否正在流式响应
 const isStreaming = ref(false)
+// 添加用户消息
+const addUserMessage = (content) => {
+  messages.value.push({
+    id: Date.now(),
+    role: 'user',
+    content,
+    timestamp: new Date().toLocaleString(),
+  })
+}
 // 发送消息
 const sendMessage = () => {
+  const msg = inputMessage.value.trim()
+  if (!msg || isStreaming.value) {
+    return
+  }
+  addUserMessage(msg)
+  inputMessage.value = ''
+  fetchAIResponse(msg)
+}
+// 获取AI响应
+const fetchAIResponse = (userMag) => {
+  isStreaming.value = true
+  messages.value.push({
+    id: Date.now(),
+    role: 'ai',
+    content: '',
+    timestamp: new Date().toLocaleString(),
+  })
+  let fullResponse = ''
   fetchStream(
     'chat',
-    { message: inputMessage.value },
-    () => {},
-    () => {},
-    () => {},
+    { message: userMag },
+    // 流式响应处理
+    (chunk) => {
+      fullResponse += chunk
+      const lastMsg = messages.value[messages.value.length - 1]
+      if (lastMsg && lastMsg.role === 'ai') {
+        lastMsg.content = fullResponse
+      }
+    },
+    // 流式响应结束
+    () => {
+      isStreaming.value = false
+    },
+    (errMsg) => {
+      const lastMsg = messages.value[messages.value.length - 1]
+      if (lastMsg && lastMsg.role === 'ai') {
+        lastMsg.content = `抱歉，AI发送错误：${errMsg}`
+      }
+      isStreaming.value = false
+      showToast('AI回复失败')
+    },
   )
 }
 </script>
@@ -60,6 +106,13 @@ const sendMessage = () => {
           >
         </div>
       </div>
+      <div class="message-list" v-else>
+        <ChatBubble v-for="msg in messages" :key="msg.id" :message="msg" />
+        <div class="streaming-indicator" v-if="isStreaming">
+          <van-loading type="spinner" size="20px" />
+          <span>AI正在思考中...</span>
+        </div>
+      </div>
     </div>
     <div class="chat-input-area">
       <van-field
@@ -82,15 +135,18 @@ const sendMessage = () => {
   </div>
 </template>
 <style scoped>
+.page-header {
+  height: 46px;
+}
 .chat-page {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding-bottom: 50px;
+  padding-bottom: 0px !important;
 }
 
 .chat-container {
-  flex: 1;
+  height: 650px;
   overflow-y: auto;
   padding: 16px;
   padding-bottom: 60px;

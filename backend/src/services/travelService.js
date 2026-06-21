@@ -76,7 +76,7 @@ class TravelService {
         fullResponse += content;
         // 发送流式数据
         if (streamCallback) {
-          streamCallback({ content });
+          streamCallback(content);
         }
       }
       return {

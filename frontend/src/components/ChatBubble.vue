@@ -16,8 +16,8 @@ import { computed } from 'vue'
 const props = defineProps({
   message: {
     type: Object,
-    required: true
-  }
+    required: true,
+  },
 })
 
 const messageClass = computed(() => {
